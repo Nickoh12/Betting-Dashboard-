@@ -1,0 +1,3 @@
+*.txt
+/.ipynb_checkpoints/
+/odds_merged.csv/*
