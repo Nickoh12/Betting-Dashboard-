@@ -172,12 +172,6 @@ links= links.query("date <=@now").reset_index(drop= True)
 append_matches(links)
 
 
-# In[456]:
-
-
-
-
-
 # In[422]:
 
 
@@ -246,7 +240,7 @@ try:
     #test3= 
 except:
     test1= pd.DataFrame()
-    test2= pd.DataFrame
+    test2= pd.DataFrame()
 
 
 # #### Consensus group 
@@ -301,7 +295,7 @@ test4= cons_test2[['home_team','away_team','date','scrape_time','time_lag','coun
 'marginH-4','marginD-4', 'marginA-4']]
 
 
-# In[ ]:
+# In[461]:
 
 
 #save to sql 
@@ -381,7 +375,7 @@ def get_colnames(database,tablename):
         print(f"Error: '{err}'")
 
 
-# In[410]:
+# In[469]:
 
 
 db_username= "root"
@@ -392,29 +386,32 @@ db_name= 'betting_football'
 connection= create_server_connection(db_ip,db_username,db_password)
 connection= create_db_connection(db_ip, db_username, db_password,db_name)
 
-oldfix= pd.DataFrame(read_query(connection,"SELECT * FROM fixtures"),columns= get_colnames('betting_football','fixtures'))
+try:
+    oldfix= pd.DataFrame(read_query(connection,"SELECT * FROM fixtures"),columns= get_colnames('betting_football','fixtures'))
+except: 
+    oldfix= pd.DataFrame()
 old1= pd.DataFrame(read_query(connection,"SELECT * FROM test_group1"),columns= get_colnames('betting_football','test_group1'))
 old2= pd.DataFrame(read_query(connection,"SELECT * FROM test_group2"),columns= get_colnames('betting_football','test_group2'))
 old3= pd.DataFrame(read_query(connection,"SELECT * FROM test_group3"),columns= get_colnames('betting_football','test_group3'))
 old4= pd.DataFrame(read_query(connection,"SELECT * FROM test_group4"),columns= get_colnames('betting_football','test_group4'))
 
-fixtures= fixtures.append(oldfix)
-test1= test1.append(old1)
-test2= test2.append(old2)
-test3= test3.append(old3)
-test4= test4.append(old4)
+fixtures= data.append(oldfix)
+test1= test1.append(old1).drop_duplicates().reset_index(drop=True)
+test2= test2.append(old2).drop_duplicates().reset_index(drop=True)
+test3= test3.append(old3).drop_duplicates().reset_index(drop=True)
+test4= test4.append(old4).drop_duplicates().reset_index(drop=True)
 
 
-# In[361]:
+# In[ ]:
 
 
 db_connection = sqlalchemy.create_engine('mysql+mysqlconnector://{0}:{1}@{2}/{3}'.
                                                format(db_username, db_password, 
                                                       db_ip, db_name))
 
-data.to_sql('fixtures',db_connection,if_exists= 'replace', index= False)
-test1.to_sql('test_group1',db_connection,if_exists= 'append', index= False)
-test2.to_sql('test_group2',db_connection,if_exists= 'append', index= False)
-test3.to_sql('test_group3',db_connection,if_exists= 'append', index= False)
-test4.to_sql('test_group4',db_connection,if_exists= 'append', index= False)
+fixtures.to_sql('fixtures',db_connection,if_exists= 'replace', index= False)
+test1.to_sql('test_group1',db_connection,if_exists= 'replace', index= False)
+test2.to_sql('test_group2',db_connection,if_exists= 'replace', index= False)
+test3.to_sql('test_group3',db_connection,if_exists= 'replace', index= False)
+test4.to_sql('test_group4',db_connection,if_exists= 'replace', index= False)
 
