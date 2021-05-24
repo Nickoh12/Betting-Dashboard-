@@ -390,10 +390,26 @@ try:
     oldfix= pd.DataFrame(read_query(connection,"SELECT * FROM fixtures"),columns= get_colnames('betting_football','fixtures'))
 except: 
     oldfix= pd.DataFrame()
-old1= pd.DataFrame(read_query(connection,"SELECT * FROM test_group1"),columns= get_colnames('betting_football','test_group1'))
-old2= pd.DataFrame(read_query(connection,"SELECT * FROM test_group2"),columns= get_colnames('betting_football','test_group2'))
-old3= pd.DataFrame(read_query(connection,"SELECT * FROM test_group3"),columns= get_colnames('betting_football','test_group3'))
-old4= pd.DataFrame(read_query(connection,"SELECT * FROM test_group4"),columns= get_colnames('betting_football','test_group4'))
+
+try:
+    old1= pd.DataFrame(read_query(connection,"SELECT * FROM test_group1"),columns= get_colnames('betting_football','test_group1'))
+except:
+    old1= pd.DataFrame()
+    
+try:
+    old2= pd.DataFrame(read_query(connection,"SELECT * FROM test_group2"),columns= get_colnames('betting_football','test_group2'))
+except:
+    old2= pd.DataFrame()
+    
+try:
+    old3= pd.DataFrame(read_query(connection,"SELECT * FROM test_group3"),columns= get_colnames('betting_football','test_group3'))
+except:
+    olds= pd.DataFrame()
+
+try:
+    old4= pd.DataFrame(read_query(connection,"SELECT * FROM test_group4"),columns= get_colnames('betting_football','test_group4'))
+except:
+    old4= pd.DataFrame()
 
 fixtures= data.append(oldfix)
 test1= test1.append(old1).drop_duplicates().reset_index(drop=True)
