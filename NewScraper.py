@@ -198,10 +198,7 @@ for names,col in data[homes+draws+aways].iteritems():
     if any(is_number(x)== False for x in col):
         data[names]= [x if is_number(x) else None for x in col]
 
-data[homes]= data[homes].astype('float16')
-data[draws]= data[draws].astype('float16')
-data[aways]= data[aways].astype('float16')
-
+data[homes+draws+aways]= data[homes+draws+aways].astype('float16')
 
 data['maxOddsH']= data[homes].max(axis=1)
 data['maxOddsD']= data[draws].max(axis=1)
@@ -277,8 +274,8 @@ cons_test1['consProbsD-3']= cons_test1[probs_draws].mean(axis= 1)
 cons_test1['consProbsA-3']= cons_test1[probs_aways].mean(axis= 1)
        
 cons_test1['marginH-3']= add_margins(cons_test1['consProbsH-3'],cons_test1['maxOddsH'])
-cons_test1['marginD-3']= add_margins(cons_test1['consProbsA-3'],cons_test1['maxOddsD'])
-cons_test1['marginA-3']= add_margins(cons_test1['consProbsD-3'],cons_test1['maxOddsA'])
+cons_test1['marginD-3']= add_margins(cons_test1['consProbsD-3'],cons_test1['maxOddsD'])
+cons_test1['marginA-3']= add_margins(cons_test1['consProbsA-3'],cons_test1['maxOddsA'])
 
 #proportional margins 
 
