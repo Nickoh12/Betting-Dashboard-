@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[417]:
+# In[1]:
 
 
 from bs4 import BeautifulSoup
@@ -33,10 +33,8 @@ import sqlalchemy
 from mysql.connector import Error
 
 
-# In[419]:
+# In[2]:
 
-
-start_time = time.time()
 
 def load_exists(driver):
     try:
@@ -69,10 +67,10 @@ def click_through(x):
 def get_links(browse):
     rows= []
     for thing in BeautifulSoup(browse.page_source,'lxml').find_all('li'):
-        if thing.find('a',{'class':'MatchTitleLink'}) and         pd.to_datetime(datetime.now()) <= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text): 
+        if thing.find('a',{'class':'MatchTitleLink'}) and         pd.to_datetime(datetime.now()) <= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text)+timedelta(hours=2): 
             dict1= {}
             match_link= 'https://www.betbrain.de' + thing.find('a', {'class':'MatchTitleLink'})['href']
-            date= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text)
+            date= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text) 
             dict1.update({'match_link':match_link,'date':date})
             rows.append(dict1)
     df= pd.DataFrame(rows)
@@ -91,7 +89,7 @@ doc= click_through(browser)
 links= get_links(doc)
 
 
-# In[6]:
+# In[3]:
 
 
 def xpath_exists(text,driver):
@@ -122,38 +120,41 @@ def get_odds(URL,playtime):
         away_team= soup.find('p',{'class':'ScoresAway'}).findAll('span')[1].text
         scrape_time= pd.to_datetime(datetime.now())
         bookie_list= []
+        
         for thing in soup.findAll('div', {'class':'OTBookmakers'}):#
             for element in thing.findAll('span', {'class':'BookieLogo BL'}):
                 bookie_list.append(element.find('span').text)
+                
         outcome= ['H','D','A']   
         exclude= ['Betfair Exchange','Betfair']
+
+        bookie_cols= [x.replace(' ','')+y for x in bookie_list for y in outcome if x not in exclude]
+        odds= []
         
+        for element in soup.findAll('a',{'class':['OTOddsLink', 'HasDeeplink']}):
+            odds.append(element.next_element.text[:-2])
+                        
         if any(x in exclude for x in bookie_list):
             exchange= True
         else:
             exchange= False
-            
-        bookie_cols= [x.replace(' ','')+y for x in bookie_list for y in outcome if x not in exclude]
-        odds= []
-        for element in soup.findAll('a',{'class':['OTOddsLink', 'HasDeeplink']}):
-            odds.append(element.next_element.text[:-2])
-        keys= ['home_team','away_team','date','scrape_time','country','league']+bookie_cols
-        
+                    
         if exchange:
             values= [home_team, away_team, date,scrape_time,country,league]+odds[:-12]
         else:
             values= [home_team, away_team, date,scrape_time,country,league]+odds
+        
+        keys= ['home_team','away_team','date','scrape_time','country','league']+bookie_cols
             
         zipper= zip(keys, values)
         match_dict= dict(zipper)
     else:
         match_dict= {}
     
-    #time.sleep(0.5)
     return match_dict
 
 
-# In[421]:
+# In[44]:
 
 
 matches= []
@@ -166,15 +167,21 @@ def append_matches(URLS):
         except:
             continue
             
-#print (time.time() - start_time, "seconds")
 now= pd.to_datetime(datetime.now()+timedelta(hours= 6.5))
 links= links.query("date <=@now").reset_index(drop= True)
 append_matches(links)
 
 
-# In[422]:
+# In[46]:
 
 
+def is_number(x):
+    try:
+        float(x)
+        return True
+    except ValueError:
+        return False
+    
 data= pd.DataFrame(matches)
 
 data['time_lag']= np.round((data['date']-data['scrape_time']).dt.total_seconds()/60,2)
@@ -186,6 +193,10 @@ bookies= data.iloc[:,7:].columns
 homes= [x for x in bookies if x.endswith('H')]
 draws= [x for x in bookies if x.endswith('D')]
 aways= [x for x in bookies if x.endswith('A')]
+
+for names,col in data[homes+draws+aways].iteritems():
+    if any(is_number(x)== False for x in col):
+        data[names]= [x if is_number(x) else None for x in col]
 
 data[homes]= data[homes].astype('float16')
 data[draws]= data[draws].astype('float16')
@@ -201,7 +212,7 @@ data['maxBookieD']= data[draws].idxmax(axis=1)
 data['maxBookieA']= data[aways].idxmax(axis=1)
 
 
-# In[424]:
+# In[47]:
 
 
 def add_margins(probability, max_odds):
@@ -245,7 +256,7 @@ except:
 
 # #### Consensus group 
 
-# In[442]:
+# In[48]:
 
 
 probs_homes= ['Probs'+x for x in bookies if x.endswith('H')]
@@ -295,139 +306,35 @@ test4= cons_test2[['home_team','away_team','date','scrape_time','time_lag','coun
 'marginH-4','marginD-4', 'marginA-4']]
 
 
-# In[461]:
+# In[49]:
 
 
-#save to sql 
-
-
-# In[ ]:
-
-
-def create_server_connection(host_name, user_name, user_password):
-    connection = None
-    try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            user=user_name,
-            passwd=user_password
-        )
-        print("MySQL Database connection successful")
-    except Error as err:
-        print(f"Error: '{err}'")
-
-    return connection
-
-
-def create_database(connection, query):
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query)
-        print("Database created successfully")
-    except Error as err:
-        print(f"Error: '{err}'")
-        
-
-def create_db_connection(host_name, user_name, user_password, db_name):
-    connection = None
-    try:
-        connection = mysql.connector.connect(
-            host=host_name,
-            user=user_name,
-            passwd=user_password,
-            database=db_name
-        )
-        print("MySQL Database connection successful")
-    except Error as err:
-        print(f"Error: '{err}'")
-
-    return connection
-
-def read_query(connection, query):
-    cursor = connection.cursor()
-    result = None
-    try:
-        cursor.execute(query)
-        result = cursor.fetchall()
-        return result
-    except Error as err:
-        print(f"Error: '{err}'")
+def save_it(df,tablename, dbname):
+    db_username= "root"
+    db_password= '4kS8GdBm!'
+    db_ip= "localhost"
+    db_name= dbname
     
-
-def execute_query(connection, query):
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query)
-        connection.commit()
-        print("Query successful")
-    except Error as err:
-        print(f"Error: '{err}'")
-        
-def get_colnames(database,tablename):
-    connection = create_db_connection("localhost", "root", '4kS8GdBm!', database)
-    cursor = connection.cursor()
-    result = None
-    try:
-        cursor.execute("""SELECT * FROM {table}""".format(table= tablename))
-        result= [i[0] for i in cursor.description]
-        return result
-    except Error as err:
-        print(f"Error: '{err}'")
-
-
-# In[469]:
-
-
-db_username= "root"
-db_password= '4kS8GdBm!'
-db_ip= "localhost"
-db_name= 'betting_football'
-
-connection= create_server_connection(db_ip,db_username,db_password)
-connection= create_db_connection(db_ip, db_username, db_password,db_name)
-
-try:
-    oldfix= pd.DataFrame(read_query(connection,"SELECT * FROM fixtures"),columns= get_colnames('betting_football','fixtures'))
-except: 
-    oldfix= pd.DataFrame()
-
-try:
-    old1= pd.DataFrame(read_query(connection,"SELECT * FROM test_group1"),columns= get_colnames('betting_football','test_group1'))
-except:
-    old1= pd.DataFrame()
-    
-try:
-    old2= pd.DataFrame(read_query(connection,"SELECT * FROM test_group2"),columns= get_colnames('betting_football','test_group2'))
-except:
-    old2= pd.DataFrame()
-    
-try:
-    old3= pd.DataFrame(read_query(connection,"SELECT * FROM test_group3"),columns= get_colnames('betting_football','test_group3'))
-except:
-    olds= pd.DataFrame()
-
-try:
-    old4= pd.DataFrame(read_query(connection,"SELECT * FROM test_group4"),columns= get_colnames('betting_football','test_group4'))
-except:
-    old4= pd.DataFrame()
-
-fixtures= data.append(oldfix)
-test1= test1.append(old1).drop_duplicates().reset_index(drop=True)
-test2= test2.append(old2).drop_duplicates().reset_index(drop=True)
-test3= test3.append(old3).drop_duplicates().reset_index(drop=True)
-test4= test4.append(old4).drop_duplicates().reset_index(drop=True)
-
-
-# In[ ]:
-
-
-db_connection = sqlalchemy.create_engine('mysql+mysqlconnector://{0}:{1}@{2}/{3}'.
+    db_connection = sqlalchemy.create_engine('mysql+mysqlconnector://{0}:{1}@{2}/{3}'.
                                                format(db_username, db_password, 
-                                                      db_ip, db_name))
-
-fixtures.to_sql('fixtures',db_connection,if_exists= 'replace', index= False)
-test1.to_sql('test_group1',db_connection,if_exists= 'replace', index= False)
-test2.to_sql('test_group2',db_connection,if_exists= 'replace', index= False)
-test3.to_sql('test_group3',db_connection,if_exists= 'replace', index= False)
-test4.to_sql('test_group4',db_connection,if_exists= 'replace', index= False)
+                                                      db_ip, db_name))    
+    try:
+        
+        df.to_sql(tablename,db_connection,if_exists= 'append', index= False)
+        print('successfully appended table')
+        
+    except:
+        
+        data = pd.read_sql('SELECT * FROM {sql_table}'.format(sql_table= tablename), db_connection)
+        print('failed to add column')
+        df2 = pd.concat([data,df])
+        df2.to_sql(tablename,db_connection,if_exists= 'replace', index= False)
+        print('successfully replaced table')
+        
+        
+save_it(data, 'fixtures', 'betbrain')
+save_it(test1, 'test_group1', 'betbrain')
+save_it(test2, 'test_group2', 'betbrain')
+save_it(test3, 'test_group3', 'betbrain')
+save_it(test4, 'test_group4', 'betbrain')
 
