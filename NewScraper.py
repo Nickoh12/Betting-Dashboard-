@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[2]:
 
 
 from bs4 import BeautifulSoup
@@ -33,7 +33,7 @@ import sqlalchemy
 from mysql.connector import Error
 
 
-# In[2]:
+# In[68]:
 
 
 def load_exists(driver):
@@ -66,13 +66,16 @@ def click_through(x):
 
 def get_links(browse):
     rows= []
-    for thing in BeautifulSoup(browse.page_source,'lxml').find_all('li'):
-        if thing.find('a',{'class':'MatchTitleLink'}) and         pd.to_datetime(datetime.now()) <= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text)+timedelta(hours=2): 
-            dict1= {}
-            match_link= 'https://www.betbrain.de' + thing.find('a', {'class':'MatchTitleLink'})['href']
-            date= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text) 
-            dict1.update({'match_link':match_link,'date':date})
-            rows.append(dict1)
+    for thing in BeautifulSoup(browse.page_source,'lxml').find_all('li',{'class':'Match'}):
+        try:
+            if thing.find('a',{'class':'MatchTitleLink'}): 
+                dict1= {}
+                match_link= 'https://www.betbrain.de' + thing.find('a', {'class':'MatchTitleLink'})['href']
+                date= pd.to_datetime(thing.find('span', {'class':'DateTime'}).text) 
+                dict1.update({'match_link':match_link,'date':date})
+                rows.append(dict1)
+        except:
+            continue
     df= pd.DataFrame(rows)
     df=df[df['match_link'].str.contains("home-draw-away")& df['match_link'].str.contains("football")].reset_index(drop= True)
     return df
@@ -89,7 +92,7 @@ doc= click_through(browser)
 links= get_links(doc)
 
 
-# In[3]:
+# In[11]:
 
 
 def xpath_exists(text,driver):
