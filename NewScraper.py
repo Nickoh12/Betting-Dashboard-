@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[1]:
 
 
 from bs4 import BeautifulSoup
@@ -33,7 +33,7 @@ import sqlalchemy
 from mysql.connector import Error
 
 
-# In[68]:
+# In[2]:
 
 
 def load_exists(driver):
@@ -171,6 +171,9 @@ def append_matches(URLS):
             continue
             
 now= pd.to_datetime(datetime.now()+timedelta(hours= 6.5))
+
+links['date']= pd.to_datetime(links['date'].dt.strftime("%Y-%d-%m %H:%M:%S"), format= "%Y-%m-%d %H:%M:%S")
+
 links= links.query("date <=@now").reset_index(drop= True)
 append_matches(links)
 
@@ -337,4 +340,10 @@ save_it(test1, 'test_group1', 'betbrain')
 save_it(test2, 'test_group2', 'betbrain')
 save_it(test3, 'test_group3', 'betbrain')
 save_it(test4, 'test_group4', 'betbrain')
+
+
+# In[ ]:
+
+
+
 
