@@ -30,7 +30,7 @@ ui<- fluidPage(
 server<- function(input, output,session){
   
   get_data<- function(table_name){
-    mydb = dbConnect(RMariaDB::MariaDB(), user="root",  password="4kS8GdBm!",dbname="betbrain", host="localhost") 
+    mydb = dbConnect(RMariaDB::MariaDB(), user="root",  password="*****",dbname="betbrain", host="localhost") 
     query= "select * from {table_name}"
     input= glue(query)
     rs= dbSendQuery(mydb, input)
