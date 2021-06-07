@@ -5,4 +5,4 @@ Relying only on the odds, I build a dashboard on shiny that displays mispriced o
 
 Here's what the dashboard currently looks like. 
 
-![Dashboard-Image](https://user-images.githubusercontent.com/80781266/121023730-d9a50780-c7a3-11eb-8ff1-2cd4d2ae70ab.PNG)
+![Screenshot (1)](https://user-images.githubusercontent.com/80781266/121028768-5e922000-c7a8-11eb-8656-bbc3b5867b9d.png)
