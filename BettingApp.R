@@ -11,21 +11,19 @@ library(plotly)
 library(DT)
 
 ui<- fluidPage(
-  dashboardHeader(title= "Sports Betting App"),
-  dashboardSidebar(sidebarMenu(
-     actionButton("update", "Update"),
-            radioButtons("model", "Model:",
-                         c("Pinnacle Equal Margins", "Pinnacle Proportional Margins",
-                           "Consensus Equal Margins", "Consensus Proportional Margins"), 
-                         selected= "Pinnacle Equal Margins"))
-            #uiOutput('date')
-            
-      )
-               ,
+  h1(id="big-heading", "Value Betting Dashboard", style="background-color:  #E0E0E0"),
   dashboardBody(
+    fluidRow(width= 12, column(5),column(width= 6,
+    radioButtons("model", "Model:",
+                 c("Pinnacle Equal Margins", "Pinnacle Proportional Margins",
+                   "Consensus Equal Margins", "Consensus Proportional Margins"), 
+                 selected= "Pinnacle Equal Margins", inline= T)), column(width= 1,
+                                                                         actionButton("update", "Update"))),
+    fluidRow(column(width= 12,
     plotlyOutput('odds'),
-    DT::dataTableOutput('matches')
-  )
+    DT::dataTableOutput('matches'))
+    
+  ))
   
 )
 
